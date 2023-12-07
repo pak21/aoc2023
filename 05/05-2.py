@@ -51,6 +51,18 @@ def apply(data_start, data_end, active_map):
 
     return new_data
 
+def combine_adjacent(ranges):
+    start = ranges[0][0]
+    combined = []
+    for a, b in zip(ranges[:-1], ranges[1:]):
+        if a[1] != b[0]:
+            combined.append((start, a[1]))
+            start = b[0]
+
+    combined.append((start, ranges[-1][1]))
+
+    return combined
+
 with open(sys.argv[1]) as f:
     data = parse_seed_ranges(f.readline())
     f.readline()
@@ -60,6 +72,8 @@ with open(sys.argv[1]) as f:
 current_type = 'seed'
 while current_type != 'location':
     data = functools.reduce(operator.add, [apply(ds, de, maps[current_type][1]) for ds, de in data])
+    data = combine_adjacent(sorted(data))
     current_type = maps[current_type][0]
+    print(current_type, data)
 
 print(min(data, key=operator.itemgetter(0))[0])

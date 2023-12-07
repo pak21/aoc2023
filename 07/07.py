@@ -11,15 +11,6 @@ ORDERING = {
     'A': 'e'
 }
 
-ORDERING_JOKERS = {
-    'T': 'a',
-    'Q': 'c',
-    'K': 'd',
-    'A': 'e',
-
-    'J': '0',
-}
-
 JOKER_CARDS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'Q', 'K', 'A']
 
 HAND_RANKS = {
@@ -36,19 +27,16 @@ def parse(l):
     cards, bid = l.split()
     return cards, int(bid)
 
-def parse_hand(c):
+def rank_hand(c):
     return HAND_RANKS[tuple(sorted(collections.Counter((collections.Counter(c).values())).items()))]
 
 def key_no_jokers(cards):
-    return (
-        parse_hand(cards),
-        [ORDERING.get(c, c) for c in cards]
-    )
+    return (rank_hand(cards), [ORDERING.get(c, c) for c in cards])
 
 def key_with_jokers(cards):
     return (
-        max(parse_hand(cards.replace('J', joker)) for joker in JOKER_CARDS),
-        [ORDERING_JOKERS.get(c, c) for c in cards]
+        max(rank_hand(cards.replace('J', joker)) for joker in JOKER_CARDS),
+        ['0' if c == 'J' else ORDERING.get(c, c) for c in cards]
     )
 
 with open(sys.argv[1]) as f:
