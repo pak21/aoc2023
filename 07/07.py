@@ -23,12 +23,12 @@ HAND_RANKS = {
     ((1, 5),): 0 # High card
 }
 
-def parse(l):
-    cards, bid = l.split()
+def parse(line):
+    cards, bid = line.split()
     return cards, int(bid)
 
-def rank_hand(c):
-    return HAND_RANKS[tuple(sorted(collections.Counter((collections.Counter(c).values())).items()))]
+def rank_hand(cards):
+    return HAND_RANKS[tuple(sorted(collections.Counter((collections.Counter(cards).values())).items()))]
 
 def key_no_jokers(cards):
     return (rank_hand(cards), [ORDERING.get(c, c) for c in cards])
@@ -46,13 +46,7 @@ parts = (
     sum(
         i * bid
         for i, (_, bid)
-        in enumerate(
-            sorted(
-                (fn(cards), bid)
-                for cards, bid
-                in data
-            ),
-        1)
+        in enumerate(sorted(data, key=lambda d: fn(d[0])), 1)
     )
     for fn
     in [key_no_jokers, key_with_jokers]
