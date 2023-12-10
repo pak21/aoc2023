@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import operator
 import sys
 
 CONNECTIONS = {
@@ -17,7 +16,7 @@ CONNECTIONS = {
 def find_start(grid):
     for y, row in enumerate(grid):
         for x, c in enumerate(row):
-            if grid[y][x] == 'S':
+            if c == 'S':
                 return (x, y)
 
     raise Exception('Start not found')
@@ -35,7 +34,7 @@ def start_type(grid, x, y):
         case (True, False, False, True): return 'F'
         case (True, False, True, False): return '-'
         case (True, True, False, False): return 'L'
-        case _: raise Exception((right_back, up_back, left_back, down_back))
+        case _: raise Exception(f"Couldn't determine start piece from signature {(right_back, up_back, left_back, down_back)}")
 
 def part1(grid, start):
     todo = [(start, 0)]
@@ -92,10 +91,11 @@ def part2(expanded_grid):
             todo.append((x, y+1))
 
     # And count empty spaces _from the original grid_ which we couldn't visit
-    return sum([
-        expanded_grid[y][x] == '.' and (x, y) not in seen
+    return len([
+        1
         for y in range(1, len(expanded_grid), 2)
         for x in range(1, len(expanded_grid[0]), 2)
+        if expanded_grid[y][x] == '.' and (x, y) not in seen
     ])
 
 with open(sys.argv[1]) as f:
@@ -106,15 +106,33 @@ grid[start[1]][start[0]] = start_type(grid, *start)
 
 seen_p1 = part1(grid, start)
 
-print(sorted(seen_p1.items(), key=operator.itemgetter(1))[-1][1])
+print(max(seen_p1.values()))
 
 # We now want to ignore everything not in the main loop
 grid_pipe_only = [
-    [c if (x, y) in seen_p1 else '.' for x, c in enumerate(grid[y])]
-    for y
-    in range(len(grid))
+    [c if (x, y) in seen_p1 else '.' for x, c in enumerate(row)]
+    for y, row
+    in enumerate(grid)
 ]
 
 expanded_grid = make_expanded_grid(grid_pipe_only)
 
 print(part2(expanded_grid))
+
+IS_CROSSING = {'|', '-', 'F', 'J'}
+
+# Borrowing from a co-worker
+#
+# from a point, if you go diagonally, you can just count the letters that would
+# create a "crossing" of the fence.  (i.e. if you travel up and to the left,
+# you just need to count the number of | - F J you encounter until you get to
+# the edge of the matrix
+
+part2_2 = 0
+last_crossings = [False] * len(grid_pipe_only[0])
+for row in grid_pipe_only:
+    new_crossings = [old ^ (c in IS_CROSSING) for c, old in zip(row, [False] + last_crossings)]
+    part2_2 += len([1 for c, crossings in zip(row, new_crossings) if c == '.' and crossings])
+    last_crossings = new_crossings
+
+print(part2_2)
