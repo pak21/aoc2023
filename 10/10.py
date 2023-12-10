@@ -119,8 +119,6 @@ expanded_grid = make_expanded_grid(grid_pipe_only)
 
 print(part2(expanded_grid))
 
-IS_CROSSING = {'|', '-', 'F', 'J'}
-
 # Borrowing from a co-worker
 #
 # from a point, if you go diagonally, you can just count the letters that would
@@ -128,11 +126,12 @@ IS_CROSSING = {'|', '-', 'F', 'J'}
 # you just need to count the number of | - F J you encounter until you get to
 # the edge of the matrix
 
+IS_CROSSING = {'|', '-', 'F', 'J'}
+
 part2_2 = 0
 last_crossings = [False] * len(grid_pipe_only[0])
 for row in grid_pipe_only:
-    new_crossings = [old ^ (c in IS_CROSSING) for c, old in zip(row, [False] + last_crossings)]
-    part2_2 += len([1 for c, crossings in zip(row, new_crossings) if c == '.' and crossings])
-    last_crossings = new_crossings
+    last_crossings = [old ^ (c in IS_CROSSING) for c, old in zip(row, [False] + last_crossings)]
+    part2_2 += len([1 for c, crossings in zip(row, last_crossings) if c == '.' and crossings])
 
 print(part2_2)
