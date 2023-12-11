@@ -12,34 +12,31 @@ def calc_dists(v1, v2, expands):
 
     return v_max - v_min, end_idx - start_idx
 
-def calc(vs, v_set):
-    expands = sorted(set(range(max(v_set))) - v_set)
+def calc(vs):
+    expands = sorted(set(range(max(vs))) - set(vs))
 
-    dists = [
-        calc_dists(v1, v2, expands)
-        for v1, v2 in itertools.combinations(vs, 2)
-    ]
-
-    return sum(d[0] for d in dists), sum(d[1] for d in dists)
+    return list(
+        map(
+            sum, 
+            zip(*(
+                calc_dists(v1, v2, expands)
+                for v1, v2 in itertools.combinations(vs, 2)
+            ))
+        )
+    )
 
 xs = []
-x_values = set()
-
 ys = []
-y_values = set()
 
 with open(sys.argv[1]) as f:
     for y, l in enumerate(f):
         for x, c in enumerate(l):
             if c == '#':
                 xs.append(x)
-                x_values.add(x)
-
                 ys.append(y)
-                y_values.add(y)
 
-x_dists = calc(xs, x_values)
-y_dists = calc(ys, y_values)
+x_dists = calc(xs)
+y_dists = calc(ys)
 
 print(x_dists[0] + x_dists[1] + y_dists[0] + y_dists[1])
 print(x_dists[0] + 999999 * x_dists[1] + y_dists[0] + 999999 * y_dists[1])
