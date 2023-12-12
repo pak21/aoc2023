@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import functools
 import operator
 import sys
 
@@ -71,7 +70,7 @@ with open(sys.argv[1]) as f:
 
 current_type = 'seed'
 while current_type != 'location':
-    data = functools.reduce(operator.add, [apply(ds, de, maps[current_type][1]) for ds, de in data])
+    data = sum([apply(ds, de, maps[current_type][1]) for ds, de in data], [])
     data = combine_adjacent(sorted(data))
     current_type = maps[current_type][0]
     print(current_type, data)

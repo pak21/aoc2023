@@ -135,3 +135,45 @@ for row in grid_pipe_only:
     part2_2 += len([1 for c, crossings in zip(row, last_crossings) if c == '.' and crossings])
 
 print(part2_2)
+
+###
+
+import enum
+
+class State(enum.Enum):
+    NOT_ON_PIPE = enum.auto(),
+    PIPE_FROM_DOWN = enum.auto(),
+    PIPE_FROM_UP = enum.auto(),
+
+part2_3 = 0
+for row in grid_pipe_only:
+    inside = False
+    state = State.NOT_ON_PIPE
+    for c in row:
+        match (state, c):
+            case (State.NOT_ON_PIPE, '.'):
+                if inside:
+                    part2_3 += 1
+            case (State.NOT_ON_PIPE, '|'):
+                inside = not inside
+            case (State.NOT_ON_PIPE, 'F'):
+                state = State.PIPE_FROM_DOWN
+            case (State.NOT_ON_PIPE, 'L'):
+                state = State.PIPE_FROM_UP
+            case (State.PIPE_FROM_DOWN, '-'):
+                pass
+            case (State.PIPE_FROM_DOWN, '7'):
+                state = State.NOT_ON_PIPE
+            case (State.PIPE_FROM_DOWN, 'J'):
+                state = State.NOT_ON_PIPE
+                inside = not inside
+            case (State.PIPE_FROM_UP, '-'):
+                pass
+            case (State.PIPE_FROM_UP, '7'):
+                state = state.NOT_ON_PIPE
+                inside = not inside
+            case (State.PIPE_FROM_UP, 'J'):
+                state = state.NOT_ON_PIPE
+            case _: raise Exception((state, c))
+
+print(part2_3)

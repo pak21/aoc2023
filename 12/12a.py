@@ -3,10 +3,14 @@
 import enum
 import sys
 
-def parse_line(l):
+def debug(*args):
+    if debug_on:
+        print(*args)
+
+def parse_line(l, repeats):
     springs, result = l.split()
-#    springs = '?'.join([springs] * 5)
-#    result = ','.join([result] * 5)
+    springs = '?'.join([springs] * repeats)
+    result = ','.join([result] * repeats)
     return list(springs), [int(x) for x in result.split(',')]
 
 def score_line(springs):
@@ -50,12 +54,14 @@ def compare(score, result):
 def combinations_(springs, result, unknowns):
     idx = unknowns[0]
     good = 0
+    evaluations = 0
     for v in ['#', '.']:
         copy = springs[:]
         copy[idx] = v
         score = score_line(copy)
         compared = compare(score, result)
-#        print(copy, score, compared)
+        debug(copy, score, compared)
+        evaluations += 1
 
         match compared:
             case Result.FAIL: pass
@@ -63,27 +69,34 @@ def combinations_(springs, result, unknowns):
                 if len(unknowns) == 1:
                     good += 1
                 else:
-                    good += combinations_(copy, result, unknowns[1:])
+                    g, e = combinations_(copy, result, unknowns[1:])
+                    good += g
+                    evaluations += e
             case Result.INCONCLUSIVE:
                 if len(unknowns) > 1:
-                    good += combinations_(copy, result, unknowns[1:])
+                    g, e = combinations_(copy, result, unknowns[1:])
+                    good += g
+                    evaluations += e
             case _: raise Exception(compared)
 
-    return good
+    return good, evaluations
 
 def combinations(springs, result):
     unknowns = [i for i, c in enumerate(springs) if c == '?']
 
     return combinations_(springs, result, unknowns)
 
+repeats = int(sys.argv[2])
+debug_on = int(sys.argv[3])
 with open(sys.argv[1]) as f:
-    puzzle = [parse_line(l) for l in f]
+    puzzle = [parse_line(l, repeats) for l in f]
 
-if True:
-    part1 = 0
-    for springs, result in puzzle:
-        r = combinations(springs, result)
-        print(''.join(springs), r)
-        part1 += r
+output = 0
+evals = 0
+for springs, result in puzzle:
+    g, e = combinations(springs, result)
+    print(''.join(springs), g, e)
+    output += g
+    evals += e
 
-    print(part1)
+print(output, evals)
