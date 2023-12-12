@@ -48,7 +48,7 @@ class Result(enum.Enum):
     ABORT_MAX = enum.auto(),
     ABORT_SUM = enum.auto(),
 
-def compare(score, result):
+def compare(score, result, unknowns_remaining):
     if score and max(score) > max(result):
         return Result.ABORT_MAX
 
@@ -58,7 +58,16 @@ def compare(score, result):
     if any(a != b for a, b in zip(score, result)):
         return Result.FAIL
 
-    return (Result.PASS if len(score) == len(result) else Result.INCONCLUSIVE)
+    if len(score) == len(result):
+        if unknowns_remaining == 0:
+            return Result.PASS
+        else:
+            return Result.INCONCLUSIVE
+
+    if unknowns_remaining == 0:
+        return Result.FAIL
+
+    return Result.INCONCLUSIVE
 
 def combinations_(springs, result, unknowns, depth):
     idx = unknowns[0]
@@ -68,7 +77,7 @@ def combinations_(springs, result, unknowns, depth):
         copy = springs[:]
         copy[idx] = v
         score = score_line(copy)
-        compared = compare(score, result)
+        compared = compare(score, result, len(unknowns)-1)
         debug(depth, copy, score, compared)
         evaluations += 1
 
@@ -76,18 +85,11 @@ def combinations_(springs, result, unknowns, depth):
             case Result.ABORT_MAX: break
             case Result.ABORT_SUM: break
             case Result.FAIL: pass
-            case Result.PASS:
-                if len(unknowns) == 1:
-                    good += 1
-                else:
-                    g, e = combinations_(copy, result, unknowns[1:], depth+1)
-                    good += g
-                    evaluations += e
+            case Result.PASS: good += 1
             case Result.INCONCLUSIVE:
-                if len(unknowns) > 1:
-                    g, e = combinations_(copy, result, unknowns[1:], depth+1)
-                    good += g
-                    evaluations += e
+                g, e = combinations_(copy, result, unknowns[1:], depth+1)
+                good += g
+                evaluations += e
             case _: raise Exception(compared)
 
     return good, evaluations
