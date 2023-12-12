@@ -43,38 +43,49 @@ def score_line(springs):
 class Result(enum.Enum):
     FAIL = enum.auto(),
     PASS = enum.auto(),
-    INCONCLUSIVE = enum.auto()
+    INCONCLUSIVE = enum.auto(),
+
+    ABORT_MAX = enum.auto(),
+    ABORT_SUM = enum.auto(),
 
 def compare(score, result):
+    if score and max(score) > max(result):
+        return Result.ABORT_MAX
+
+    if sum(score) > sum(result):
+        return Result.ABORT_SUM
+
     if any(a != b for a, b in zip(score, result)):
         return Result.FAIL
 
     return (Result.PASS if len(score) == len(result) else Result.INCONCLUSIVE)
 
-def combinations_(springs, result, unknowns):
+def combinations_(springs, result, unknowns, depth):
     idx = unknowns[0]
     good = 0
     evaluations = 0
-    for v in ['#', '.']:
+    for v in ['.', '#']:
         copy = springs[:]
         copy[idx] = v
         score = score_line(copy)
         compared = compare(score, result)
-        debug(copy, score, compared)
+        debug(depth, copy, score, compared)
         evaluations += 1
 
         match compared:
+            case Result.ABORT_MAX: break
+            case Result.ABORT_SUM: break
             case Result.FAIL: pass
             case Result.PASS:
                 if len(unknowns) == 1:
                     good += 1
                 else:
-                    g, e = combinations_(copy, result, unknowns[1:])
+                    g, e = combinations_(copy, result, unknowns[1:], depth+1)
                     good += g
                     evaluations += e
             case Result.INCONCLUSIVE:
                 if len(unknowns) > 1:
-                    g, e = combinations_(copy, result, unknowns[1:])
+                    g, e = combinations_(copy, result, unknowns[1:], depth+1)
                     good += g
                     evaluations += e
             case _: raise Exception(compared)
@@ -84,7 +95,7 @@ def combinations_(springs, result, unknowns):
 def combinations(springs, result):
     unknowns = [i for i, c in enumerate(springs) if c == '?']
 
-    return combinations_(springs, result, unknowns)
+    return combinations_(springs, result, unknowns, 0)
 
 repeats = int(sys.argv[2])
 debug_on = int(sys.argv[3])
@@ -95,7 +106,7 @@ output = 0
 evals = 0
 for springs, result in puzzle:
     g, e = combinations(springs, result)
-    print(''.join(springs), g, e)
+    print(''.join(springs), g)
     output += g
     evals += e
 
