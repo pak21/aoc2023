@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import collections
-import functools
 import sys
 
 def debug(*args):
@@ -63,7 +62,8 @@ def remove_dot(before, after, filter_params):
                 case (True, True):
                     k = (False, before_l, (), after_l)
 
-            r[k] += before_count * after_count 
+            if key_filter(k, filter_params):
+                r[k] += before_count * after_count 
     return r
 
 def remove_hash(before, after, filter_params):
@@ -101,8 +101,16 @@ def remove_question(before, after, filter_params):
 
     return r
 
-@functools.cache
-def get_possibilities(big, filter_params):
+P_CACHE = {}
+def get_possibilities(*args):
+    v = P_CACHE.get(args)
+    if v is None:
+        v = get_possibilities_(*args)
+        P_CACHE[args] = v
+
+    return v
+
+def get_possibilities_(big, filter_params):
     global evals
     debug('start get_possibilities', big)
 
@@ -155,6 +163,9 @@ for springs, result in puzzle:
         simplified[k] += count
     part1 += simplified[result]
     print(springs, result, simplified[result])
+
+#    print()
+#    print(get_possibilities(springs + '?' + springs, filter_params))
 
 print(part1)
 print(evals)
