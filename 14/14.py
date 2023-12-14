@@ -16,97 +16,56 @@ with open(sys.argv[1]) as f:
 max_x = x
 max_y = y + 1
 
-def north(before):
+def tilt(before, step, select_fn, build_fn, max_value):
     after = before.copy()
     for rock in after.copy():
         x = rock[0]
         y = rock[1]
-        last_empty = y
-        while y >= 0:
-            if (x, y) in cubes:
+        i = select_fn(rock)
+        last_empty = i
+        while i >= 0 and i < max_y:
+            new_pos = build_fn(rock, i)
+            if new_pos in cubes:
                 break
 
-            if (x, y) not in after:
-                last_empty = y
+            if new_pos not in after:
+                last_empty = i
 
-            y -= 1
+            i += step
 
         after.remove(rock)
-        after.add((x, last_empty))
+        after.add(build_fn(rock, last_empty))
 
     return after
 
-def south(before):
-    after = before.copy()
-    for rock in after.copy():
-        x = rock[0]
-        y = rock[1]
-        last_empty = y
-        while y < max_y:
-            if (x, y) in cubes:
-                break
+def tilt_x(before, step):
+    return tilt(before, step, lambda r: r[0], lambda r, i: (i, r[1]), max_x)
 
-            if (x, y) not in after:
-                last_empty = y
-
-            y += 1
-
-        after.remove(rock)
-        after.add((x, last_empty))
-
-    return after
+def tilt_y(before, step):
+    return tilt(before, step, lambda r: r[1], lambda r, i: (r[0], i), max_y)
 
 def east(before):
-    after = before.copy()
-    for rock in after.copy():
-        x = rock[0]
-        y = rock[1]
-        last_empty = x
-        while x < max_x:
-            if (x, y) in cubes:
-                break
+    return tilt_x(before, 1)
 
-            if (x, y) not in after:
-                last_empty = x
-
-            x += 1
-
-        after.remove(rock)
-        after.add((last_empty, y))
-
-    return after
+def north(before):
+    return tilt_y(before, -1)
 
 def west(before):
-    after = before.copy()
-    for rock in after.copy():
-        x = rock[0]
-        y = rock[1]
-        last_empty = x
-        while x >= 0:
-            if (x, y) in cubes:
-                break
+    return tilt_x(before, -1)
 
-            if (x, y) not in after:
-                last_empty = x
-
-            x -= 1
-
-        after.remove(rock)
-        after.add((last_empty, y))
-
-    return after
+def south(before):
+    return tilt_y(before, 1)
 
 def spin(before):
     return east(south(west(north(before))))
 
 def score(rounded):
-    return sum(max_y - r[1] for r in rounded)
+    return max_y * len(rounded) - sum(r[1] for r in rounded)
 
-part1 = north(rounded)
-print(score(part1))
+print(score(north(rounded)))
 
 seen = {tuple(rounded): 0}
-answers = {}
+answers = [score(rounded)]
 
 spins = 0
 while True:
@@ -120,4 +79,4 @@ while True:
         break
 
     seen[t] = spins
-    answers[spins] = score(rounded)
+    answers.append(score(rounded))
