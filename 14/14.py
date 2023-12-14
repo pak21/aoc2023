@@ -21,7 +21,7 @@ def tilt(before, step, select_fn, build_fn, max_value):
     for rock in after.copy():
         i = select_fn(rock)
         last_empty = i
-        while i >= 0 and i < max_y:
+        while i >= 0 and i < max_value:
             new_pos = build_fn(rock, i)
             if new_pos in cubes:
                 break
