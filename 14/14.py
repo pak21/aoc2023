@@ -19,8 +19,6 @@ max_y = y + 1
 def tilt(before, step, select_fn, build_fn, max_value):
     after = before.copy()
     for rock in after.copy():
-        x = rock[0]
-        y = rock[1]
         i = select_fn(rock)
         last_empty = i
         while i >= 0 and i < max_y:
