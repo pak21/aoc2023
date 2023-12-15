@@ -1,2 +1,6 @@
 input.txt
 *.swp
+
+Cargo.lock
+Cargo.toml
+target
