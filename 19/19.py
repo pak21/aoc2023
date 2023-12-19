@@ -13,6 +13,11 @@ class Conditional:
     target: str
 
 @dataclasses.dataclass
+class Workflow:
+    rules: list[Conditional]
+    default: str
+
+@dataclasses.dataclass
 class Constraint:
     min_value: int
     max_value: int
@@ -20,14 +25,19 @@ class Constraint:
     def range(self):
         return max(self.max_value - self.min_value + 1, 0)
 
+@dataclasses.dataclass
+class State:
+    workflow_id: str
+    constraints: list[Constraint]
+
 def parse_conditional(s):
     condition, target = s.split(':')
     return Conditional(condition[0], condition[1], int(condition[2:]), target)
 
 def parse_rules(s):
     strings = s[:-1].split(',')
-    conditionals = [parse_conditional(s2) for s2 in strings[:-1]]
-    return conditionals, strings[-1]
+    rules = [parse_conditional(s2) for s2 in strings[:-1]]
+    return Workflow(rules, strings[-1])
 
 def parse_workflow(l):
     name, rules_s = l.split('{')
@@ -52,30 +62,25 @@ def apply_conditional(rating, conditional):
         case _: raise Exception(conditional)
 
 def apply_workflow(rating, workflow):
-    for conditional in workflow[0]:
+    for conditional in workflow.rules:
         if apply_conditional(rating, conditional):
             return conditional.target
 
-    return workflow[1]
+    return workflow.default
 
-def replace_noops(rules, noops):
-    return [
+def replace_noops(workflow, noops):
+    return Workflow(
         [
-            Conditional(
-                c.rating,
-                c.operator,
-                c.value,
-                noops.get(c.target, c.target)
-            )
+            Conditional(c.rating, c.operator, c.value, noops.get(c.target, c.target))
             for c
-            in rules[0]
+            in workflow.rules
         ],
-        noops.get(rules[1], rules[1])
-    ]
+        noops.get(workflow.default, workflow.default)
+    )
 
 def optimize(workflows):
     while True:
-        noop_rules = {name: rules[1] for name, rules in workflows.items() if all(c.target == rules[1] for c in rules[0])}
+        noop_rules = {name: wf.default for name, wf in workflows.items() if all(c.target == wf.default for c in wf.rules)}
         if not noop_rules:
             break
         workflows = {name: replace_noops(rules, noop_rules) for name, rules in workflows.items() if name not in noop_rules}
@@ -103,19 +108,17 @@ def apply_conditional_parallel(constraints, conditional):
     return constraints_true, constraints_false
 
 def apply_workflow_parallel(workflows, state):
-    active_workflow, constraints = state
-
     states_out = []
-    for conditional in workflows[active_workflow][0]:
-        constraints_true, constraints_false = apply_conditional_parallel(constraints, conditional)
+    constraints = state.constraints
+    for conditional in workflows[state.workflow_id].rules:
+        constraints_true, constraints = apply_conditional_parallel(constraints, conditional)
         if constraints_true is not None:
-            states_out.append((conditional.target, constraints_true))
-        constraints = constraints_false
+            states_out.append(State(conditional.target, constraints_true))
         if constraints is None:
             break
 
     if constraints is not None:
-        states_out.append((workflows[active_workflow][1], constraints))
+        states_out.append(State(workflows[state.workflow_id].default, constraints))
 
     return states_out
 
@@ -123,8 +126,8 @@ def filter_complete(states):
     filtered = []
     accepted = 0
     for state in states:
-        match state[0]:
-            case 'A': accepted += functools.reduce(operator.mul, (c.range() for c in state[1].values()))
+        match state.workflow_id:
+            case 'A': accepted += functools.reduce(operator.mul, (c.range() for c in state.constraints.values()))
             case 'R': pass
             case _: filtered.append(state)
 
@@ -148,7 +151,7 @@ def main():
 
     print(part1)
 
-    states = [('in', {k: Constraint(1, 4000) for k in ratings[0].keys()})]
+    states = [State('in', {k: Constraint(1, 4000) for k in ratings[0]})]
     part2 = 0
     total_states = 1
     while states:
