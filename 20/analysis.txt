@@ -1,0 +1,130 @@
+bj ModuleType.FLIPFLOP False ['gg']
+bp ModuleType.FLIPFLOP False ['zr']
+broadcaster ModuleType.BROADCASTER None ['ns', 'pj', 'xz', 'sg']
+cg ModuleType.FLIPFLOP False ['lv', 'ck']
+ch ModuleType.FLIPFLOP False ['dx']
+ck ModuleType.CONJUNCTION {'rj': False, 'hr': False, 'pl': False, 'rk': False, 'cg': False, 'kd': False, 'xq': False, 'km': False, 'ns': False} ['lb', 'lv', 'ns', 'kl', 'qt']
+cr ModuleType.FLIPFLOP False ['jg', 'jh']
+cs ModuleType.CONJUNCTION {'ls': False, 'pq': False, 'kk': False, 'pj': False, 'pr': False, 'tl': False, 'tc': False, 'vn': False, 'pm': False, 'jd': False} ['hn', 'pj', 'qb', 'zl']
+dd ModuleType.FLIPFLOP False ['dx', 'qp']
+dr ModuleType.CONJUNCTION {'mp': False, 'qt': False, 'qb': False, 'ng': False} ['rx']
+dx ModuleType.CONJUNCTION {'zz': False, 'ch': False, 'qp': False, 'rm': False, 'dd': False, 'tn': False, 'rr': False, 'xz': False} ['zj', 'xz', 'mp', 'zn', 'xs', 'hc']
+fl ModuleType.FLIPFLOP False ['jh', 'ps']
+gg ModuleType.FLIPFLOP False ['jh', 'nx']
+hc ModuleType.FLIPFLOP False ['tn']
+hn ModuleType.FLIPFLOP False ['pq']
+hr ModuleType.FLIPFLOP False ['ck', 'pl']
+jd ModuleType.FLIPFLOP False ['cs']
+jg ModuleType.FLIPFLOP False ['jh']
+jh ModuleType.CONJUNCTION {'st': False, 'gg': False, 'cr': False, 'fl': False, 'rz': False, 'jg': False, 'sg': False, 'ps': False, 'nx': False} ['ng', 'bp', 'zr', 'sg', 'bj']
+kd ModuleType.FLIPFLOP False ['rk', 'ck']
+kk ModuleType.FLIPFLOP False ['cs', 'tc']
+kl ModuleType.FLIPFLOP False ['lb']
+km ModuleType.FLIPFLOP False ['ck']
+lb ModuleType.FLIPFLOP False ['cg']
+ls ModuleType.FLIPFLOP False ['cs', 'jd']
+lv ModuleType.FLIPFLOP False ['hr']
+mp ModuleType.CONJUNCTION {'dx': False} ['dr']
+ng ModuleType.CONJUNCTION {'jh': False} ['dr']
+ns ModuleType.FLIPFLOP False ['ck', 'kd']
+nx ModuleType.FLIPFLOP False ['jh', 'cr']
+pj ModuleType.FLIPFLOP False ['cs', 'pr']
+pl ModuleType.FLIPFLOP False ['ck', 'xq']
+pm ModuleType.FLIPFLOP False ['cs', 'kk']
+pq ModuleType.FLIPFLOP False ['tl', 'cs']
+pr ModuleType.FLIPFLOP False ['zl', 'cs']
+ps ModuleType.FLIPFLOP False ['bp', 'jh']
+qb ModuleType.CONJUNCTION {'cs': False} ['dr']
+qp ModuleType.FLIPFLOP False ['dx', 'zj']
+qt ModuleType.CONJUNCTION {'ck': False} ['dr']
+rj ModuleType.FLIPFLOP False ['km', 'ck']
+rk ModuleType.FLIPFLOP False ['ck', 'kl']
+rm ModuleType.FLIPFLOP False ['zz', 'dx']
+rr ModuleType.FLIPFLOP False ['rm', 'dx']
+rz ModuleType.FLIPFLOP False ['jh', 'fl']
+sg ModuleType.FLIPFLOP False ['rz', 'jh']
+st ModuleType.FLIPFLOP False ['jh', 'bj']
+tc ModuleType.FLIPFLOP False ['cs', 'hn']
+tl ModuleType.FLIPFLOP False ['vn', 'cs']
+tn ModuleType.FLIPFLOP False ['dx', 'xs']
+vn ModuleType.FLIPFLOP False ['cs', 'ls']
+xq ModuleType.FLIPFLOP False ['rj', 'ck']
+xs ModuleType.FLIPFLOP False ['rr']
+xz ModuleType.FLIPFLOP False ['dx', 'zn']
+zj ModuleType.FLIPFLOP False ['hc']
+zl ModuleType.FLIPFLOP False ['pm']
+zn ModuleType.FLIPFLOP False ['dd']
+zr ModuleType.FLIPFLOP False ['st']
+zz ModuleType.FLIPFLOP False ['dx', 'ch']
+
+---
+
+dr ModuleType.CONJUNCTION {'mp': False, 'qt': False, 'qb': False, 'ng': False} ['rx']
+
+=> to get rx low, we need high on all of mp, ng, qb & qt
+
+mp ModuleType.CONJUNCTION {'dx': False} ['dr']
+ng ModuleType.CONJUNCTION {'jh': False} ['dr']
+qb ModuleType.CONJUNCTION {'cs': False} ['dr']
+qt ModuleType.CONJUNCTION {'ck': False} ['dr']
+
+=> to get rx low, we need low on all of ck, cs, dx, jh
+
+ck ModuleType.CONJUNCTION {'rj': False, 'hr': False, 'pl': False, 'rk': False, 'cg': False, 'kd': False, 'xq': False, 'km': False, 'ns': False} ['lb', 'lv', 'ns', 'kl', 'qt']
+cs ModuleType.CONJUNCTION {'ls': False, 'pq': False, 'kk': False, 'pj': False, 'pr': False, 'tl': False, 'tc': False, 'vn': False, 'pm': False, 'jd': False} ['hn', 'pj', 'qb', 'zl']
+dx ModuleType.CONJUNCTION {'zz': False, 'ch': False, 'qp': False, 'rm': False, 'dd': False, 'tn': False, 'rr': False, 'xz': False} ['zj', 'xz', 'mp', 'zn', 'xs', 'hc']
+jh ModuleType.CONJUNCTION {'st': False, 'gg': False, 'cr': False, 'fl': False, 'rz': False, 'jg': False, 'sg': False, 'ps': False, 'nx': False} ['ng', 'bp', 'zr', 'sg', 'bj']
+
+=> to get rx low, we need high on all of
+  rj, hr, pl, rk, cg, kd, xq, km, ns
+  ls, pq, kk, pj, pr, tl, tc, vn, pm, jd
+  zz, ch, qp, rm, dd, tn, rr, xz
+  st, gg, cr, fl, rz, jg, sg, ps, nx
+
+rj ModuleType.FLIPFLOP False ['km', 'ck']
+hr ModuleType.FLIPFLOP False ['ck', 'pl']
+pl ModuleType.FLIPFLOP False ['ck', 'xq']
+rk ModuleType.FLIPFLOP False ['ck', 'kl']
+cg ModuleType.FLIPFLOP False ['lv', 'ck']
+kd ModuleType.FLIPFLOP False ['rk', 'ck']
+xq ModuleType.FLIPFLOP False ['rj', 'ck']
+km ModuleType.FLIPFLOP False ['ck']
+ns ModuleType.FLIPFLOP False ['ck', 'kd']
+
+ls ModuleType.FLIPFLOP False ['cs', 'jd']
+pq ModuleType.FLIPFLOP False ['tl', 'cs']
+kk ModuleType.FLIPFLOP False ['cs', 'tc']
+pj ModuleType.FLIPFLOP False ['cs', 'pr']
+pr ModuleType.FLIPFLOP False ['zl', 'cs']
+tl ModuleType.FLIPFLOP False ['vn', 'cs']
+tc ModuleType.FLIPFLOP False ['cs', 'hn']
+vn ModuleType.FLIPFLOP False ['cs', 'ls']
+pm ModuleType.FLIPFLOP False ['cs', 'kk']
+jd ModuleType.FLIPFLOP False ['cs']
+
+zz ModuleType.FLIPFLOP False ['dx', 'ch']
+ch ModuleType.FLIPFLOP False ['dx']
+qp ModuleType.FLIPFLOP False ['dx', 'zj']
+rm ModuleType.FLIPFLOP False ['zz', 'dx']
+dd ModuleType.FLIPFLOP False ['dx', 'qp']
+tn ModuleType.FLIPFLOP False ['dx', 'xs']
+rr ModuleType.FLIPFLOP False ['rm', 'dx']
+xz ModuleType.FLIPFLOP False ['dx', 'zn']
+
+st ModuleType.FLIPFLOP False ['jh', 'bj']
+gg ModuleType.FLIPFLOP False ['jh', 'nx']
+cr ModuleType.FLIPFLOP False ['jg', 'jh']
+fl ModuleType.FLIPFLOP False ['jh', 'ps']
+rz ModuleType.FLIPFLOP False ['jh', 'fl']
+jg ModuleType.FLIPFLOP False ['jh']
+sg ModuleType.FLIPFLOP False ['rz', 'jh']
+ps ModuleType.FLIPFLOP False ['bp', 'jh']
+nx ModuleType.FLIPFLOP False ['jh', 'cr']
+
+ck 4007
+cs 4027
+dx 3917
+jh 3919
+
+247702167614647
+
