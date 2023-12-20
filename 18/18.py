@@ -11,18 +11,14 @@ DIRS = {
     'D': (0, 1)
 }
 
-LOOKUP = {
-    '0': 'R',
-    '1': 'D',
-    '2': 'L',
-    '3': 'U'
-}
+PART2_LOOKUP = ['R', 'D', 'L', 'U']
 
 def parse_line(l, part):
-    match = re.match(r'^(.) (\d+) \(#([0-9a-f]{5})(.)\)$', l)
+    match = re.match(r'^(.) (\d+) \(#([0-9a-f]{5})(\d)\)$', l)
     match part:
         case 1: return match.group(1), int(match.group(2))
-        case 2: return LOOKUP[match.group(4)], int(match.group(3), 16)
+        case 2: return PART2_LOOKUP[int(match.group(4))], int(match.group(3), 16)
+        case _: raise Exception(part)
 
 part = int(sys.argv[2])
 with open(sys.argv[1]) as f:
@@ -39,25 +35,21 @@ horizontal_ends = collections.defaultdict(set)
 for direction, distance in instructions:
     match direction:
         case 'R':
-            nx = x + distance
             horizontal_starts[y].add(x)
-            horizontal_ends[y].add(nx)
-            x = nx
-        case 'U':
-            ny = y - distance
-            vertical_starts[ny].add(x)
-            vertical_ends[y].add(x)
-            y = ny
-        case 'L':
-            nx = x - distance
-            horizontal_starts[y].add(nx)
+            x += distance
             horizontal_ends[y].add(x)
-            x = nx
-        case 'D':
-            ny = y + distance
+        case 'U':
+            vertical_ends[y].add(x)
+            y -= distance
             vertical_starts[y].add(x)
-            vertical_ends[ny].add(x)
-            y = ny
+        case 'L':
+            horizontal_ends[y].add(x)
+            x -= distance
+            horizontal_starts[y].add(x)
+        case 'D':
+            vertical_starts[y].add(x)
+            y += distance
+            vertical_ends[y].add(x)
         case _: raise Exception(direction)
 
 vertical_starts = sorted(vertical_starts.items())
@@ -82,19 +74,20 @@ def count(active, horizontal_starts, horizontal_ends):
     combined_count = 0
     range_active = False
     horizontal_active = False
-    for x, ys in sorted(actions.items()):
+    for x, row_actions in sorted(actions.items()):
         if range_active:
             active_count += x - last_x
 
         if range_active or horizontal_active:
             combined_count += x - last_x
 
-        for y in ys:
-            match y:
+        for action in row_actions:
+            match action:
                 case 'RANGE_START': range_active = True
                 case 'RANGE_END': range_active = False
                 case 'HORIZONTAL_START': horizontal_active = True
                 case 'HORIZONTAL_END': horizontal_active = False
+                case _: raise Exception(y)
 
         last_x = x
 
