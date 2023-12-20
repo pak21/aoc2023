@@ -25,23 +25,23 @@ class BroadcastModule(Module):
 
 @dataclasses.dataclass
 class FlipFlopModule(Module):
-    module_state: bool
+    state: bool
     outputs: list[str]
 
     def accept(self, pulse):
         if pulse.level: return []
 
-        self.module_state = not self.module_state
-        return [Pulse(pulse.dest, o, self.module_state) for o in self.outputs]
+        self.state = not self.state
+        return [Pulse(pulse.dest, o, self.state) for o in self.outputs]
 
 @dataclasses.dataclass
 class ConjunctionModule(Module):
-    module_state: dict[str, bool]
+    inputs: dict[str, bool]
     outputs: list[str]
 
     def accept(self, pulse):
-        self.module_state[pulse.src] = pulse.level
-        output = not all(self.module_state.values())
+        self.inputs[pulse.src] = pulse.level
+        output = not all(self.inputs.values())
         return [Pulse(pulse.dest, o, output) for o in self.outputs]
 
 def parse_module(l):
@@ -50,26 +50,26 @@ def parse_module(l):
 
     match prefix[0]:
         case '%':
-            mn = prefix[1:]
+            name = prefix[1:]
             module = FlipFlopModule(False, outputs)
         case '&':
-            mn = prefix[1:]
+            name = prefix[1:]
             module = ConjunctionModule({}, outputs)
         case _ if prefix == 'broadcaster':
-            mn = prefix
+            name = prefix
             module = BroadcastModule(outputs)
         case _: raise Exception(prefix)
 
-    return mn, module
+    return name, module
 
 def parse(fn):
     with open(fn) as f:
-        modules = dict([parse_module(l.rstrip()) for l in f])
+        modules = dict(parse_module(l.rstrip()) for l in f)
 
     for name, module in modules.items():
         for output in module.outputs:
             if output in modules and isinstance(modules[output], ConjunctionModule):
-                modules[output].module_state[name] = False
+                modules[output].inputs[name] = False
 
     return modules
 
@@ -83,7 +83,7 @@ def main():
     if not isinstance(output_inverter[1], ConjunctionModule):
         raise Exception(f'Expected output inverter is not an inverter: {output_inverter}')
 
-    watches = output_inverter[1].module_state.keys()
+    watches = output_inverter[1].inputs.keys()
     print(f'Watching {watches} for Part 2')
 
     periods = {}
