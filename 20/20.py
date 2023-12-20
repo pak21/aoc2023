@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+import abc
 import dataclasses
-import enum
 import math
 import sys
 
@@ -11,79 +11,79 @@ class Pulse:
     dest: str
     level: bool
 
-class ModuleType(enum.Enum):
-    BROADCASTER = enum.auto(),
-    FLIPFLOP = enum.auto(),
-    CONJUNCTION = enum.auto(),
+class Module(abc.ABC):
+    @abc.abstractmethod
+    def accept(self, pulse):
+        pass
+
+@dataclasses.dataclass
+class BroadcastModule(Module):
+    outputs: list[str]
+
+    def accept(self, pulse):
+        return [Pulse(pulse.dest, o, pulse.level) for o in self.outputs]
+
+@dataclasses.dataclass
+class FlipFlopModule(Module):
+    module_state: bool
+    outputs: list[str]
+
+    def accept(self, pulse):
+        if pulse.level: return []
+
+        self.module_state = not self.module_state
+        return [Pulse(pulse.dest, o, self.module_state) for o in self.outputs]
+
+@dataclasses.dataclass
+class ConjunctionModule(Module):
+    module_state: dict[str, bool]
+    outputs: list[str]
+
+    def accept(self, pulse):
+        self.module_state[pulse.src] = pulse.level
+        output = not all(self.module_state.values())
+        return [Pulse(pulse.dest, o, output) for o in self.outputs]
 
 def parse_module(l):
     prefix, suffix = l.split(' -> ')
+    outputs = suffix.split(', ')
+
     match prefix[0]:
         case '%':
             mn = prefix[1:]
-            mt = ModuleType.FLIPFLOP
-            ms = False
+            module = FlipFlopModule(False, outputs)
         case '&':
             mn = prefix[1:]
-            mt = ModuleType.CONJUNCTION
-            ms = {}
+            module = ConjunctionModule({}, outputs)
         case _ if prefix == 'broadcaster':
             mn = prefix
-            mt = ModuleType.BROADCASTER
-            ms = None
+            module = BroadcastModule(outputs)
         case _: raise Exception(prefix)
 
-    outputs = suffix.split(', ')
-
-    return mn, (mt, ms, outputs)
+    return mn, module
 
 def parse(fn):
     with open(fn) as f:
         modules = dict([parse_module(l.rstrip()) for l in f])
 
-    for mn, (mt, ms, outputs) in modules.items():
-        for output in outputs:
-            if output in modules and modules[output][0] == ModuleType.CONJUNCTION:
-                modules[output][1][mn] = False
+    for name, module in modules.items():
+        for output in module.outputs:
+            if output in modules and isinstance(modules[output], ConjunctionModule):
+                modules[output].module_state[name] = False
 
     return modules
-
-def send_pulse(modules, pulse):
-#    print(f'{src} -{"high" if high else "low"}-> {dest}')
-    if pulse.dest not in modules:
-        return []
-
-    mt, ms, outputs = modules[pulse.dest]
-    match mt:
-        case ModuleType.FLIPFLOP:
-            if pulse.level:
-                pulses = []
-            else:
-                ms = not ms
-                modules[pulse.dest] = (mt, ms, outputs)
-                pulses = [Pulse(pulse.dest, o, ms) for o in outputs]
-
-        case ModuleType.CONJUNCTION:
-            ms[pulse.src] = pulse.level
-            modules[pulse.dest] = (mt, ms, outputs)
-            output = not all(ms.values())
-            pulses = [Pulse(pulse.dest, o, output) for o in outputs]
-
-        case _: raise Exception(mt)
-
-    return pulses
 
 def main():
     modules = parse(sys.argv[1])
 
-    output_inverter = [m for m in modules.items() if 'rx' in m[1][2]]
+    output_inverter = [m for m in modules.items() if 'rx' in m[1].outputs]
     if len(output_inverter) != 1 :
         raise Exception(f'More than one module connected to rx: {output_inverter}')
     output_inverter = output_inverter[0]
-    if output_inverter[1][0] != ModuleType.CONJUNCTION:
+    if not isinstance(output_inverter[1], ConjunctionModule):
         raise Exception(f'Expected output inverter is not an inverter: {output_inverter}')
 
-    watches = output_inverter[1][1].keys()
+    watches = output_inverter[1].module_state.keys()
     print(f'Watching {watches} for Part 2')
 
     periods = {}
@@ -92,8 +92,7 @@ def main():
     counts = {False: 0, True: 0}
     while len(periods) != len(watches):
         n += 1
-        counts[False] += 1 # button to broadcaster
-        todo = [Pulse('broadcaster', o, False) for o in modules['broadcaster'][2]]
+        todo = [Pulse('button', 'broadcaster', False)]
         while todo:
             pulse = todo.pop(0)
 
@@ -103,8 +102,8 @@ def main():
                 print(f'{pulse.src} went high after {n} presses')
                 periods[pulse.src] = n
 
-            pulses = send_pulse(modules, pulse)
-            todo += pulses
+            if pulse.dest in modules:
+                todo += modules[pulse.dest].accept(pulse)
 
         if n == 1000:
             print('Part 1:', counts[False] * counts[True])
