@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 
+import dataclasses
 import enum
 import math
 import sys
+
+@dataclasses.dataclass
+class Pulse:
+    src: str
+    dest: str
+    level: bool
 
 class ModuleType(enum.Enum):
     BROADCASTER = enum.auto(),
@@ -41,26 +48,26 @@ def parse(fn):
 
     return modules
 
-def send_pulse(modules, src, dest, high):
+def send_pulse(modules, pulse):
 #    print(f'{src} -{"high" if high else "low"}-> {dest}')
-    if dest not in modules:
+    if pulse.dest not in modules:
         return []
 
-    mt, ms, outputs = modules[dest]
+    mt, ms, outputs = modules[pulse.dest]
     match mt:
         case ModuleType.FLIPFLOP:
-            if high:
+            if pulse.level:
                 pulses = []
             else:
                 ms = not ms
-                modules[dest] = (mt, ms, outputs)
-                pulses = [(dest, o, ms) for o in outputs]
+                modules[pulse.dest] = (mt, ms, outputs)
+                pulses = [Pulse(pulse.dest, o, ms) for o in outputs]
 
         case ModuleType.CONJUNCTION:
-            ms[src] = high
-            modules[dest] = (mt, ms, outputs)
+            ms[pulse.src] = pulse.level
+            modules[pulse.dest] = (mt, ms, outputs)
             output = not all(ms.values())
-            pulses = [(dest, o, output) for o in outputs]
+            pulses = [Pulse(pulse.dest, o, output) for o in outputs]
 
         case _: raise Exception(mt)
 
@@ -86,17 +93,17 @@ def main():
     while len(periods) != len(watches):
         n += 1
         counts[False] += 1 # button to broadcaster
-        todo = [('broadcaster', o, False) for o in modules['broadcaster'][2]]
+        todo = [Pulse('broadcaster', o, False) for o in modules['broadcaster'][2]]
         while todo:
-            src, dest, high = todo.pop(0)
+            pulse = todo.pop(0)
 
-            counts[high] += 1
+            counts[pulse.level] += 1
 
-            if src in watches and high:
-                print(f'{src} went high after {n} presses')
-                periods[src] = n
+            if pulse.src in watches and pulse.level:
+                print(f'{pulse.src} went high after {n} presses')
+                periods[pulse.src] = n
 
-            pulses = send_pulse(modules, src, dest, high)
+            pulses = send_pulse(modules, pulse)
             todo += pulses
 
         if n == 1000:
