@@ -130,13 +130,13 @@ def max_y(scale, grid_y):
     n_grids = (3 ** scale) // 2 + 1
     return n_grids * grid_y - 1
 
-def scale1_(grid, todo, scale):
-    cache_key = (1, tuple(todo))
+def scaled_(grid, todo, scale):
+    cache_key = (scale, tuple(todo))
     if cache_key in SCALE_CACHE:
         seen, right, up, left, down = BASE_CACHE[cache_key]
         return seen, right, up, left, down
 
-    print('  scale1_ not cached')
+    print('  scale_ not cached')
 
     subgrids = split_to_subgrids(todo, len(grid[0]), len(grid))
     grids_todo = list(subgrids.keys())
@@ -151,8 +151,6 @@ def scale1_(grid, todo, scale):
     subgrid_width = (3 ** (scale - 1)) * len(grid[0])
     subgrid_height = (3 ** (scale - 1)) * len(grid)
 
-    print(scale, subgrid_height)
-
     while len(grids_done) < 9:
         grid_pos = grids_todo.pop(0)
         if grid_pos in grids_done:
@@ -163,7 +161,7 @@ def scale1_(grid, todo, scale):
         todo = subgrids[grid_pos]
         heapq.heapify(todo)
 
-        print(f'Scale 1, subgrid {grid_pos} -> {todo}')
+        print(f'Scale {scale}, subgrid {grid_pos} -> {todo}')
         subgrid_seen, r, u, l, d = base_puzzle(grid, todo)
 
         for k, v in subgrid_seen.items():
@@ -213,15 +211,15 @@ def scale1_(grid, todo, scale):
 
     return seen, out_r, out_u, out_l, out_d
 
-def scale1(grid, todo):
-    return normalize_moves(grid, todo, lambda g, t: scale1_(g, t, 1))
+def scaled(grid, todo, scale):
+    return normalize_moves(grid, todo, lambda g, t: scaled_(g, t, scale))
 
 def main():
     grid, start = parse(sys.argv[1])
     max_moves = int(sys.argv[2])
 
     todo = [(0, start)]
-    seen, r, u, l, d = scale1(grid, todo)
+    seen, r, u, l, d = scaled(grid, todo, 1)
 
     print(seen)
     print(sum(plots for moves, plots in seen.items() if moves <= max_moves and moves % 2 == max_moves % 2))
