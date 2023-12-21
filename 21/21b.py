@@ -118,6 +118,18 @@ def min_x(scale, grid_x):
     n_grids = (scale ** 3) // 2
     return -n_grids * grid_x
 
+def max_x(scale, grid_x):
+    n_grids = (scale ** 3) // 2 + 1
+    return n_grids * grid_x - 1
+        
+def min_y(scale, grid_y):
+    n_grids = (scale ** 3) // 2
+    return -n_grids * grid_y
+
+def max_y(scale, grid_y):
+    n_grids = (scale ** 3) // 2 + 1
+    return n_grids * grid_y - 1
+
 def scale1_(grid, todo, scale):
     cache_key = (1, tuple(todo))
     if cache_key in SCALE_CACHE:
@@ -158,24 +170,27 @@ def scale1_(grid, todo, scale):
             subgrids[(grid_x + 1, grid_y)] += r
             grids_todo.append((grid_x + 1, grid_y))
 
-        u = [(n, (x, y + len(grid))) for n, (x, y) in u]
         if grid_y == -1:
             pass
         else:
+            new_y = max_y(scale - 1, len(grid))
+            u = [(n, (x, new_y)) for n, (x, y) in u]
             subgrids[(grid_x, grid_y - 1)] += u
             grids_todo.append((grid_x, grid_y - 1))
 
-        l = [(n, (x + len(grid[0]), y)) for n, (x, y) in l]
         if grid_x == -1:
             pass
         else:
+            new_x = max_x(scale - 1, len(grid[0]))
+            l = [(n, (new_x, y)) for n, (x, y) in l]
             subgrids[(grid_x - 1, grid_y)] += l
             grids_todo.append((grid_x - 1, grid_y))
 
-        d = [(n, (x, y - len(grid))) for n, (x, y) in d]
         if grid_y == 1:
             pass
         else:
+            new_y = min_y(scale - 1, len(grid))
+            d = [(n, (x, new_y)) for n, (x, y) in d]
             subgrids[(grid_x, grid_y + 1)] += d
             grids_todo.append((grid_x, grid_y + 1))
 
