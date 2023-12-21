@@ -91,9 +91,10 @@ def main():
     grid, start = parse(sys.argv[1])
     max_n = int(sys.argv[2])
 
-    seen, _, _, _, _ = part1_with_min(grid, [(0, start)])
+    seen, r, u, _, _ = part1_with_min(grid, [(0, start)])
 
     print(len([1 for n in seen.values() if n <= max_n and n % 2 == max_n % 2]))
+    print(u)
 
 if __name__ == '__main__':
     main()

@@ -115,19 +115,19 @@ def split_to_subgrids(todo, grid_x, grid_y):
     return subgrids
         
 def min_x(scale, grid_x):
-    n_grids = (scale ** 3) // 2
+    n_grids = (3 ** scale) // 2
     return -n_grids * grid_x
 
 def max_x(scale, grid_x):
-    n_grids = (scale ** 3) // 2 + 1
+    n_grids = (3 ** scale) // 2 + 1
     return n_grids * grid_x - 1
         
 def min_y(scale, grid_y):
-    n_grids = (scale ** 3) // 2
+    n_grids = (3 ** scale) // 2
     return -n_grids * grid_y
 
 def max_y(scale, grid_y):
-    n_grids = (scale ** 3) // 2 + 1
+    n_grids = (3 ** scale) // 2 + 1
     return n_grids * grid_y - 1
 
 def scale1_(grid, todo, scale):
@@ -143,6 +143,15 @@ def scale1_(grid, todo, scale):
     grids_done = set()
 
     seen = collections.defaultdict(int)
+    out_r = []
+    out_u = []
+    out_l = []
+    out_d = []
+
+    subgrid_width = (3 ** (scale - 1)) * len(grid[0])
+    subgrid_height = (3 ** (scale - 1)) * len(grid)
+
+    print(scale, subgrid_height)
 
     while len(grids_done) < 9:
         grid_pos = grids_todo.pop(0)
@@ -163,7 +172,9 @@ def scale1_(grid, todo, scale):
         grid_x, grid_y = grid_pos
 
         if grid_x == 1:
-            pass
+            new_x = min_x(scale, len(grid[0]))
+            r = [(n, (new_x, y + grid_y * subgrid_height)) for n, (x, y) in r]
+            out_r += r
         else:
             new_x = min_x(scale - 1, len(grid[0]))
             r = [(n, (new_x, y)) for n, (x, y) in r]
@@ -171,7 +182,9 @@ def scale1_(grid, todo, scale):
             grids_todo.append((grid_x + 1, grid_y))
 
         if grid_y == -1:
-            pass
+            new_y = max_y(scale, len(grid))
+            u = [(n, (x + grid_x * subgrid_width, new_y)) for n, (x, y) in u]
+            out_u += u
         else:
             new_y = max_y(scale - 1, len(grid))
             u = [(n, (x, new_y)) for n, (x, y) in u]
@@ -179,7 +192,9 @@ def scale1_(grid, todo, scale):
             grids_todo.append((grid_x, grid_y - 1))
 
         if grid_x == -1:
-            pass
+            new_x = max_x(scale, len(grid[0]))
+            l = [(n, (new_x, y + grid_y * subgrid_height)) for n, (x, y) in l]
+            out_l += l
         else:
             new_x = max_x(scale - 1, len(grid[0]))
             l = [(n, (new_x, y)) for n, (x, y) in l]
@@ -187,14 +202,16 @@ def scale1_(grid, todo, scale):
             grids_todo.append((grid_x - 1, grid_y))
 
         if grid_y == 1:
-            pass
+            new_y = min_y(scale, len(grid))
+            d = [(n, (x + grid_x * subgrid_width, new_y)) for n, (x, y) in d]
+            out_d += d
         else:
             new_y = min_y(scale - 1, len(grid))
             d = [(n, (x, new_y)) for n, (x, y) in d]
             subgrids[(grid_x, grid_y + 1)] += d
             grids_todo.append((grid_x, grid_y + 1))
 
-    return seen, [], [], [], []
+    return seen, out_r, out_u, out_l, out_d
 
 def scale1(grid, todo):
     return normalize_moves(grid, todo, lambda g, t: scale1_(g, t, 1))
@@ -204,7 +221,7 @@ def main():
     max_moves = int(sys.argv[2])
 
     todo = [(0, start)]
-    seen, _, _, _, _ = scale1(grid, todo)
+    seen, r, u, l, d = scale1(grid, todo)
 
     print(seen)
     print(sum(plots for moves, plots in seen.items() if moves <= max_moves and moves % 2 == max_moves % 2))
