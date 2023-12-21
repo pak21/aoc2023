@@ -114,8 +114,11 @@ def split_to_subgrids(todo, grid_x, grid_y):
 
     return subgrids
         
+def min_x(scale, grid_x):
+    n_grids = (scale ** 3) // 2
+    return -n_grids * grid_x
 
-def scale1_(grid, todo):
+def scale1_(grid, todo, scale):
     cache_key = (1, tuple(todo))
     if cache_key in SCALE_CACHE:
         seen, right, up, left, down = BASE_CACHE[cache_key]
@@ -147,10 +150,11 @@ def scale1_(grid, todo):
 
         grid_x, grid_y = grid_pos
 
-        r = [(n, (x - len(grid[0]), y)) for n, (x, y) in r]
         if grid_x == 1:
             pass
         else:
+            new_x = min_x(scale - 1, len(grid[0]))
+            r = [(n, (new_x, y)) for n, (x, y) in r]
             subgrids[(grid_x + 1, grid_y)] += r
             grids_todo.append((grid_x + 1, grid_y))
 
@@ -178,7 +182,7 @@ def scale1_(grid, todo):
     return seen, [], [], [], []
 
 def scale1(grid, todo):
-    return normalize_moves(grid, todo, scale1_)
+    return normalize_moves(grid, todo, lambda g, t: scale1_(g, t, 1))
 
 def main():
     grid, start = parse(sys.argv[1])

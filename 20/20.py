@@ -76,21 +76,43 @@ def parse(fn):
 def main():
     modules = parse(sys.argv[1])
 
+    print('digraph{')
+    for name, module in modules.items():
+        if isinstance(module, FlipFlopModule):
+            print(f'{name} -> {{{",".join(module.outputs)}}}')
+        elif isinstance(module, ConjunctionModule):
+            print(f'{name} -> {{{",".join(module.outputs)}}}')
+        elif isinstance(module, BroadcastModule):
+            print(f'{name} -> {{{",".join(module.outputs)}}}')
+        else:
+            raise Exception(name, module)
+    print('}')
+
+#    return
+
+    part1_only = False
+    watches = {}
     output_inverter = [m for m in modules.items() if 'rx' in m[1].outputs]
-    if len(output_inverter) != 1 :
-        raise Exception(f'More than one module connected to rx: {output_inverter}')
-    output_inverter = output_inverter[0]
-    if not isinstance(output_inverter[1], ConjunctionModule):
-        raise Exception(f'Expected output inverter is not an inverter: {output_inverter}')
+    match len(output_inverter):
+        case 0:
+            print(f"No rx output found, assuming we're using test data")
+            part1_only = True
 
-    watches = output_inverter[1].inputs.keys()
-    print(f'Watching {watches} for Part 2')
+        case 1:
+            output_inverter = output_inverter[0]
+            if not isinstance(output_inverter[1], ConjunctionModule):
+                raise Exception(f'Expected output inverter is not an inverter: {output_inverter}')
+            watches = output_inverter[1].inputs.keys()
+            periods = {}
+            print(f'Watching {watches} for Part 2')
 
-    periods = {}
+        case _:
+            raise Exception(f'More than one module connected to rx: {output_inverter}')
 
     n = 0
     counts = {False: 0, True: 0}
-    while len(periods) != len(watches):
+    done = False
+    while not done:
         n += 1
         todo = [Pulse('button', 'broadcaster', False)]
         while todo:
@@ -101,14 +123,17 @@ def main():
             if pulse.src in watches and pulse.level:
                 print(f'{pulse.src} went high after {n} presses')
                 periods[pulse.src] = n
+                if len(periods) == len(watches):
+                    print(f'Output will go low after {math.lcm(*periods.values())} presses')
+                    done = True
 
             if pulse.dest in modules:
                 todo += modules[pulse.dest].accept(pulse)
 
         if n == 1000:
             print('Part 1:', counts[False] * counts[True])
-
-    print(f'Output will go low after {math.lcm(*periods.values())} presses')
+            if part1_only:
+                done = True
 
 if __name__ == '__main__':
     main()
