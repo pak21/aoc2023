@@ -56,7 +56,7 @@ def base_puzzle_(grid, todo):
         seen, right, up, left, down = BASE_CACHE[cache_key]
         return seen, right, up, left, down
 
-    print('  base_puzzle_ not cached')
+#    print('  base_puzzle_ not cached')
 
     seen = {}
     right = []
@@ -110,7 +110,7 @@ SCALE_CACHE = {}
 def split_to_subgrids(todo, grid_x, grid_y):
     subgrids = collections.defaultdict(list)
     for n, (x, y) in todo:
-        subgrids[(x // grid_x, y // grid_y)].append((n, (x, y)))
+        subgrids[(x // grid_x, y // grid_y)].append((n, (x % grid_x, y % grid_y)))
 
     return subgrids
         
@@ -136,9 +136,12 @@ def scaled_(grid, todo, scale):
         seen, right, up, left, down = BASE_CACHE[cache_key]
         return seen, right, up, left, down
 
-    print('  scale_ not cached')
+#    print('  scale_ not cached')
 
-    subgrids = split_to_subgrids(todo, len(grid[0]), len(grid))
+    subgrid_width = (3 ** (scale - 1)) * len(grid[0])
+    subgrid_height = (3 ** (scale - 1)) * len(grid)
+
+    subgrids = split_to_subgrids(todo, subgrid_width, subgrid_height)
     grids_todo = list(subgrids.keys())
     grids_done = set()
 
@@ -148,8 +151,6 @@ def scaled_(grid, todo, scale):
     out_l = []
     out_d = []
 
-    subgrid_width = (3 ** (scale - 1)) * len(grid[0])
-    subgrid_height = (3 ** (scale - 1)) * len(grid)
 
     while len(grids_done) < 9:
         grid_pos = grids_todo.pop(0)
@@ -161,8 +162,11 @@ def scaled_(grid, todo, scale):
         todo = subgrids[grid_pos]
         heapq.heapify(todo)
 
-        print(f'Scale {scale}, subgrid {grid_pos} -> {todo}')
-        subgrid_seen, r, u, l, d = base_puzzle(grid, todo)
+#        print(f'Scale {scale}, subgrid {grid_pos} -> {todo}')
+        if scale == 1:
+            subgrid_seen, r, u, l, d = base_puzzle(grid, todo)
+        else:
+            subgrid_seen, r, u, l, d = scaled(grid, todo, scale - 1)
 
         for k, v in subgrid_seen.items():
             seen[k] += v
@@ -217,11 +221,11 @@ def scaled(grid, todo, scale):
 def main():
     grid, start = parse(sys.argv[1])
     max_moves = int(sys.argv[2])
+    scale = int(sys.argv[3])
 
     todo = [(0, start)]
-    seen, r, u, l, d = scaled(grid, todo, 1)
+    seen, r, u, l, d = scaled(grid, todo, scale)
 
-    print(seen)
     print(sum(plots for moves, plots in seen.items() if moves <= max_moves and moves % 2 == max_moves % 2))
 
 if __name__ == '__main__':
