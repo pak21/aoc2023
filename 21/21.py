@@ -8,12 +8,9 @@ def parse(fn):
     with open(fn) as f:
         grid = [list(r.rstrip()) for r in f]
 
-    for y, r in enumerate(grid):
-        for x, c in enumerate(r):
-            if c == 'S':
-                start = (x, y)
-
     grid = [[c == '#' for c in r] for r in grid]
+
+    start = (len(grid[0]) // 2, len(grid) // 2)
 
     return (grid, start)
 
@@ -47,7 +44,7 @@ def can_move(p, grid):
 
     return Action.BLOCKED if grid[p[1]][p[0]] else Action.MOVE
     
-def part1(grid, todo):
+def part1(grid, todo, max_moves):
     seen = {}
     right = []
     up = []
@@ -56,6 +53,9 @@ def part1(grid, todo):
 
     while todo:
         n, p = heapq.heappop(todo)
+
+        if n > max_moves:
+            break
 
         if p in seen:
             continue
@@ -74,10 +74,10 @@ def part1(grid, todo):
                 
     return seen, right, up, left, down
 
-def part1_with_min(grid, todo):
+def part1_with_min(grid, todo, max_moves):
     min_moves = todo[0][0]
     corrected = [(n - min_moves, p) for n, p in todo]
-    seen, right, up, left, down = part1(grid, corrected)
+    seen, right, up, left, down = part1(grid, corrected, max_moves)
 
     seen = {p: n + min_moves for p, n in seen.items()}
     right = [(n + min_moves, p) for n, p in right]
@@ -91,7 +91,7 @@ def main():
     grid, start = parse(sys.argv[1])
     max_n = int(sys.argv[2])
 
-    seen, r, u, _, _ = part1_with_min(grid, [(0, start)])
+    seen, r, u, _, _ = part1_with_min(grid, [(0, start)], max_n)
 
     print(len([1 for n in seen.values() if n <= max_n and n % 2 == max_n % 2]))
 
