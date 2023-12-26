@@ -16,13 +16,6 @@ def parse_brick(l):
     start = parse_coords(start_s)
     end = parse_coords(end_s)
 
-    axis = [i for i, (a, b) in enumerate(zip(start, end)) if a != b]
-    if len(axis) > 1:
-        raise Exception(l)
-
-    if any(a > b for a, b in zip(start, end)):
-        raise Exception(l)
-
     return Brick(start, end)
 
 def do_overlap(b1, b2):
@@ -42,10 +35,7 @@ def parse(fn):
         return [parse_brick(l.rstrip()) for l in f]
 
 def does_block(i, j, b1, b2, overlaps):
-    if b2.end[2] != b1.start[2] - 1:
-        return False
-
-    return overlaps[i, j]
+    return b2.end[2] == b1.start[2] - 1 and overlaps[i, j]
 
 def fall(bricks, overlaps):
     has_moved = True
@@ -55,12 +45,9 @@ def fall(bricks, overlaps):
         for i, brick in enumerate(bricks):
             start_z = brick.start[2]
             if start_z == 1:
-                # Brick already on the ground
                 continue
-            moving_to = start_z - 1
-            blocked = any(does_block(i, j, brick, b2, overlaps) for j, b2 in enumerate(bricks))
 
-            if not blocked:
+            if not any(does_block(i, j, brick, b2, overlaps) for j, b2 in enumerate(bricks))
                 brick.start[2] -= 1
                 brick.end[2] -= 1
                 has_moved = True
